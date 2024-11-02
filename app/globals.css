@@ -1,0 +1,51 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 222 47% 11%;
+  --foreground: 0 0% 98%;
+  --card: 222 47% 13%;
+  --card-foreground: 0 0% 98%;
+  --popover: 222 47% 11%;
+  --popover-foreground: 0 0% 98%;
+  --primary: 199 89% 48%;
+  --primary-foreground: 0 0% 98%;
+  --secondary: 222 47% 15%;
+  --secondary-foreground: 0 0% 98%;
+  --muted: 222 47% 15%;
+  --muted-foreground: 215 20.2% 65.1%;
+  --accent: 222 47% 15%;
+  --accent-foreground: 0 0% 98%;
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 0 0% 98%;
+  --border: 222 47% 15%;
+  --input: 222 47% 15%;
+  --ring: 199 89% 48%;
+  --radius: 0.75rem;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+.skill-bar {
+  @apply h-2 rounded-full bg-primary/20 overflow-hidden;
+}
+
+.skill-progress {
+  @apply h-full bg-primary transition-all duration-500;
+}
+
+.gradient-text {
+  @apply bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-cyan-400;
+}
+
+* {
+  scroll-behavior: smooth;
+}
