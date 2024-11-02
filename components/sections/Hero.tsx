@@ -51,7 +51,7 @@ export function Hero() {
   const [showResume, setShowResume] = useState(false);
 
   const resumeUrl =
-    "https://drive.google.com/file/d/1WhJQ4rSKBgNBGXiOiGk9nZlNJuKxK4G0/view?usp=sharing";
+    "https://drive.google.com/file/d/1GmpA0eo8ZFUgHitfpEiUWutBXcV92Ctn/view?usp=sharing";
 
   const scrollToContact = () => {
     const contactSection = document.querySelector("#contact");
