@@ -97,7 +97,7 @@ const Navbar: React.FC = () => {
     const element = document.getElementById(sectionId);
 
     if (element) {
-      const navHeight = 80; // Navbar height
+      const navHeight = 20; // Navbar height
       const elementPosition = element.getBoundingClientRect().top;
       const offsetPosition = elementPosition + window.pageYOffset - navHeight;
 
