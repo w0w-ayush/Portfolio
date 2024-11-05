@@ -1,16 +1,7 @@
 "use client";
 
 import { Card } from "@/components/ui/card";
-import {
-  Laptop,
-  Trophy,
-  Palette,
-  Tv,
-  Globe2,
-  Shell,
-  Code2,
-  Brain,
-} from "lucide-react";
+import { Laptop, Trophy, Palette, Globe2, Code2, Brain } from "lucide-react";
 import { motion } from "framer-motion";
 
 export function AboutMe() {
@@ -24,7 +15,7 @@ export function AboutMe() {
     {
       icon: <Trophy className="w-8 h-8" />,
       title: "Competitive Coder",
-      description: "LeetCode | GeeksforGeeks | C++ | Java",
+      description: "LeetCode | GeeksforGeeks",
       className: "bg-yellow-500/10 hover:bg-yellow-500/20",
     },
     {
@@ -60,8 +51,7 @@ export function AboutMe() {
           About Me
         </h2>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
-          {/* Main Content Card */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-6">
           <Card className="p-6 sm:p-8 bg-card col-span-1 lg:col-span-2 h-full">
             <h3 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">
               Full Stack Developer & Competitive Coder
@@ -85,28 +75,14 @@ export function AboutMe() {
                 me write more efficient code in my day-to-day work. I've solved
                 600+ DSA problems across platforms like LeetCode and
                 GeeksforGeeks, constantly pushing myself to improve my
-                algorithmic thinking. Outside the digital world, I'm dedicated
-                to fitness and regularly hit the gym, applying the same
-                discipline and consistency I bring to coding to my physical
-                well-being.
-              </p>
-              <p className="text-sm sm:text-base">
-                My fascination with anime has taught me the value of
-                perseverance and creativity, which I apply to every project I
-                undertake. Just like how anime characters never give up on their
-                goals, I believe in persistent learning and growth. This mindset
-                extends beyond coding into my fitness journey and open source
-                contributions. Whether it's building muscle or building code, I
-                believe in continuous improvement and pushing past limitations.
-                My diverse interests in technology, fitness, and anime have
-                taught me that success comes through dedication, consistency,
-                and a willingness to embrace new challenges.
+                algorithmic thinking. I'm always learning, exploring new
+                technologies, best practices, and innovative solutions to
+                continuously improve myself and the work I deliver.
               </p>
             </div>
           </Card>
 
-          {/* Skills Cards Grid */}
-          <div className="grid grid-cols-2 gap-4 sm:gap-6 h-full">
+          <div className="grid grid-cols-2 gap-4 sm:gap-4 h-full">
             {cards.map((card, index) => (
               <motion.div
                 key={card.title}
