@@ -1,6 +1,5 @@
 "use client";
 
-import { Card } from "@/components/ui/card";
 import { motion } from "framer-motion";
 import useSWR from "swr";
 import LeetCodeStats from "../CodingComponents/LeetCodeStats";
