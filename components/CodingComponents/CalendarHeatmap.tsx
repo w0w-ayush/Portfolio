@@ -1,207 +1,236 @@
-import React, { useRef, useState, useEffect } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { Card } from "@/components/ui/card";
+import { GITHUB_USERNAME } from "@/lib/api-utils";
+import useSWR from "swr";
+import GitHubCalendar from "react-github-calendar";
+import { motion } from "framer-motion";
+import {
+  Github,
+  GitPullRequest,
+  GitFork,
+  Star,
+  Users,
+  BookOpen,
+  AlertCircle,
+  Loader2,
+} from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
-interface CalendarDay {
-  date: Date;
-  count: number;
-}
+const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
-interface CalendarHeatmapProps {
-  data: Record<string, number> | undefined;
-}
-
-const getYearData = (): Date => {
-  const date = new Date();
-  date.setMonth(date.getMonth() - 12);
-  return date;
+const animationVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0 },
 };
 
 const getIntensityColor = (count: number): string => {
-  if (count === 0) return "bg-gray-100 dark:bg-gray-800";
-  if (count <= 2) return "bg-emerald-100 dark:bg-emerald-900";
-  if (count <= 4) return "bg-emerald-300 dark:bg-emerald-700";
-  if (count <= 6) return "bg-emerald-500 dark:bg-emerald-500";
-  return "bg-emerald-700 dark:bg-emerald-300";
+  if (count === 0) return "#1f2937";
+  if (count <= 2) return "#064e3b";
+  if (count <= 4) return "#047857";
+  if (count <= 6) return "#10b981";
+  return "#6ee7b7";
 };
 
-const getMonthName = (date: Date): string => {
-  return date.toLocaleString("default", { month: "short" });
+const theme = {
+  light: [
+    getIntensityColor(0),
+    getIntensityColor(1),
+    getIntensityColor(3),
+    getIntensityColor(5),
+    getIntensityColor(7),
+  ],
+  dark: [
+    getIntensityColor(0),
+    getIntensityColor(1),
+    getIntensityColor(3),
+    getIntensityColor(5),
+    getIntensityColor(7),
+  ],
 };
 
-export const CalendarHeatmap: React.FC<CalendarHeatmapProps> = ({
-  data,
-}): JSX.Element => {
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const [showLeftScroll, setShowLeftScroll] = useState(false);
-  const [showRightScroll, setShowRightScroll] = useState(true);
+export function GitHubStats() {
+  const { data, error, isLoading } = useSWR("/api/github", fetcher, {
+    refreshInterval: 300000,
+    revalidateOnFocus: false,
+  });
 
-  const monthGroups: { label: string; weeks: CalendarDay[][] }[] = [];
-  let currentWeek: CalendarDay[] = [];
-  let currentMonthWeeks: CalendarDay[][] = [];
-  let currentMonth = -1;
+  console.log("Github data - ", data);
 
-  const today = new Date();
-  const startDate = getYearData();
+  const stats = [
+    {
+      icon: <Github />,
+      label: "Contributions",
+      value: data?.stats?.totalContributions,
+    },
+    {
+      icon: <GitPullRequest />,
+      label: "Merged PRs",
+      value: data?.stats?.mergedPRs,
+    },
+    // { icon: <GitFork />, label: "Forks", value: data?.stats?.forkedRepos },
+    { icon: <Star />, label: "Stars", value: data?.stats?.starredRepos },
+    // { icon: <Users />, label: "Followers", value: data?.user?.followers },
+    {
+      icon: <BookOpen />,
+      label: "Repositories",
+      value: data?.user?.publicRepos,
+    },
+  ];
 
-  const submissionMap = new Map(
-    Object.entries(data || {}).map(([key, value]) => [
-      new Date(parseInt(key) * 1000).toDateString(),
-      value,
-    ])
-  );
-
-  for (let d = new Date(startDate); d <= today; d.setDate(d.getDate() + 1)) {
-    if (currentWeek.length === 7) {
-      currentMonthWeeks.push(currentWeek);
-      currentWeek = [];
-    }
-
-    if (d.getMonth() !== currentMonth) {
-      if (currentMonthWeeks.length > 0) {
-        monthGroups.push({
-          label: getMonthName(new Date(d.getFullYear(), currentMonth)),
-          weeks: currentMonthWeeks,
-        });
-        currentMonthWeeks = [];
-      }
-      currentMonth = d.getMonth();
-    }
-
-    const count = submissionMap.get(d.toDateString()) || 0;
-    currentWeek.push({
-      date: new Date(d),
-      count,
-    });
+  if (error) {
+    return (
+      <section className="py-16">
+        <div className="container px-4">
+          <Alert variant="destructive">
+            <AlertCircle className="h-5 w-5" />
+            <AlertTitle>Error Loading Data</AlertTitle>
+            <AlertDescription>
+              Unable to load GitHub statistics. Please try again later.
+            </AlertDescription>
+          </Alert>
+        </div>
+      </section>
+    );
   }
-
-  if (currentWeek.length > 0) {
-    currentMonthWeeks.push(currentWeek);
-  }
-  if (currentMonthWeeks.length > 0) {
-    monthGroups.push({
-      label: getMonthName(new Date(today.getFullYear(), currentMonth)),
-      weeks: currentMonthWeeks,
-    });
-  }
-
-  // Scroll handling
-  const handleScroll = () => {
-    if (scrollContainerRef.current) {
-      const { scrollLeft, scrollWidth, clientWidth } =
-        scrollContainerRef.current;
-      setShowLeftScroll(scrollLeft > 0);
-      setShowRightScroll(scrollLeft < scrollWidth - clientWidth - 10);
-    }
-  };
-
-  useEffect(() => {
-    const scrollContainer = scrollContainerRef.current;
-    if (scrollContainer) {
-      // Initial scroll to right end
-      scrollContainer.scrollLeft = scrollContainer.scrollWidth;
-      handleScroll();
-      scrollContainer.addEventListener("scroll", handleScroll);
-    }
-    return () => {
-      scrollContainer?.removeEventListener("scroll", handleScroll);
-    };
-  }, []);
-
-  const scroll = (direction: "left" | "right") => {
-    if (scrollContainerRef.current) {
-      const scrollAmount = scrollContainerRef.current.clientWidth * 0.75;
-      scrollContainerRef.current.scrollBy({
-        left: direction === "left" ? -scrollAmount : scrollAmount,
-        behavior: "smooth",
-      });
-    }
-  };
 
   return (
-    <div className="mt-6 -mx-6">
-      <div className="flex justify-between items-center mb-4 px-6">
-        <p className="text-sm text-muted-foreground">
-          Submission Activity (Last 12 Months)
-        </p>
-        <div className="flex items-center gap-2">
-          <div className="text-xs text-muted-foreground">Less</div>
-          <div className="flex gap-1">
-            {[0, 2, 4, 6, 8].map((level) => (
-              <div
-                key={level}
-                className={`w-3 h-3 sm:w-4 sm:h-4 ${getIntensityColor(level)}`}
-              />
-            ))}
-          </div>
-          <div className="text-xs text-muted-foreground">More</div>
-        </div>
-      </div>
-
-      <div className="relative">
-        {/* Left scroll button */}
-        {showLeftScroll && (
-          <button
-            onClick={() => scroll("left")}
-            className="absolute left-0 top-1/2 -translate-y-1/2 z-10 p-1 bg-background/80 backdrop-blur-sm border rounded-full shadow-lg"
-          >
-            <ChevronLeft className="w-4 h-4" />
-          </button>
-        )}
-
-        {/* Right scroll button */}
-        {showRightScroll && (
-          <button
-            onClick={() => scroll("right")}
-            className="absolute right-0 top-1/2 -translate-y-1/2 z-10 p-1 bg-background/80 backdrop-blur-sm border rounded-full shadow-lg"
-          >
-            <ChevronRight className="w-4 h-4" />
-          </button>
-        )}
-
-        {/* Scrollable container */}
-        <div
-          ref={scrollContainerRef}
-          className="overflow-x-auto hide-scrollbar"
-          style={{
-            scrollbarWidth: "none",
-            msOverflowStyle: "none",
-          }}
+    <section className="py-20" id="github">
+      <div className="container max-w-7xl mx-auto px-4">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center mb-12"
         >
-          <div className="flex w-full gap-4 sm:gap-6 px-6 min-w-max">
-            {monthGroups.map((month, monthIndex) => (
-              <div key={monthIndex} className="relative">
-                <div className="flex items-center gap-4 mb-2">
-                  <h4 className="text-sm font-medium text-muted-foreground whitespace-nowrap">
-                    {month.label}
-                  </h4>
-                  <div className="h-px flex-grow bg-border" />
-                </div>
-                <div className="flex gap-1">
-                  {month.weeks.map((week, weekIndex) => (
-                    <div key={weekIndex} className="flex flex-col gap-1">
-                      {week.map((day, dayIndex) => (
-                        <div key={dayIndex} className="relative">
-                          <div
-                            className={`w-3 h-3 sm:w-4 sm:h-4 ${getIntensityColor(
-                              day.count
-                            )} hover:scale-110 transition-transform cursor-pointer group`}
-                          />
-                          <div className="pointer-events-none absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs font-medium text-white bg-gray-900 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 shadow-lg">
-                            {day.date.toLocaleDateString()}: {day.count}{" "}
-                            submissions
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
+          {data?.user?.avatarUrl && (
+            <img
+              src={data.user.avatarUrl}
+              alt={data.user.name || GITHUB_USERNAME}
+              className="w-28 h-28 rounded-full mx-auto mb-4"
+            />
+          )}
+          <h2 className="text-3xl font-bold">
+            {data?.user?.name || GITHUB_USERNAME}
+          </h2>
+          {data?.user?.bio && (
+            <p className="text-muted-foreground mt-2 text-lg">
+              {data.user.bio}
+            </p>
+          )}
+        </motion.div>
 
-export default CalendarHeatmap;
+        {/* GitHub Stats */}
+        <motion.div
+          initial="hidden"
+          animate="visible"
+          variants={animationVariants}
+          className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8"
+        >
+          {stats.map((stat) => (
+            <motion.div key={stat.label} variants={animationVariants}>
+              <Card className="p-4 h-full hover:shadow-lg transition-shadow">
+                <div className="flex flex-col items-center">
+                  {isLoading ? (
+                    <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+                  ) : (
+                    <>
+                      <div className="text-primary mb-2">{stat.icon}</div>
+                      <div className="text-sm font-medium text-muted-foreground">
+                        {stat.label}
+                      </div>
+                      <div className="text-2xl font-bold mt-1">
+                        {stat.value?.toLocaleString() || "0"}
+                      </div>
+                    </>
+                  )}
+                </div>
+              </Card>
+            </motion.div>
+          ))}
+        </motion.div>
+
+        {/* Top Repositories */}
+        <motion.div
+          initial="hidden"
+          animate="visible"
+          variants={animationVariants}
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8"
+        >
+          {isLoading
+            ? Array.from({ length: 3 }).map((_, i) => (
+                <Card key={i} className="p-6">
+                  <div className="animate-pulse space-y-4">
+                    <div className="h-4 bg-muted rounded w-3/4"></div>
+                    <div className="h-3 bg-muted rounded w-full"></div>
+                    <div className="h-3 bg-muted rounded w-full"></div>
+                  </div>
+                </Card>
+              ))
+            : data?.pinnedRepos?.map((repo: any) => (
+                <motion.div key={repo.name} variants={animationVariants}>
+                  <Card
+                    className="p-6 hover:shadow-md transition-shadow cursor-pointer h-full"
+                    onClick={() => window.open(repo.url, "_blank")}
+                  >
+                    <h3 className="font-semibold mb-2 line-clamp-1">
+                      {repo.name}
+                    </h3>
+                    <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
+                      {repo.description}
+                    </p>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="flex items-center">
+                        <Star className="w-4 h-4 mr-1" />
+                        {repo.stars.toLocaleString()}
+                      </span>
+                      <span className="flex items-center">
+                        <GitFork className="w-4 h-4 mr-1" />
+                        {repo.forks.toLocaleString()}
+                      </span>
+                      <span className="flex items-center">
+                        <span
+                          className={`w-3 h-3 rounded-full ${
+                            repo.language == "JavaScript"
+                              ? "bg-yellow-500"
+                              : "bg-primary"
+                          } mr-1`}
+                        ></span>
+                        {repo.language}
+                      </span>
+                    </div>
+                  </Card>
+                </motion.div>
+              ))}
+        </motion.div>
+
+        {/* Contribution Calendar */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+        >
+          <Card className="p-8 w-full flex flex-col items-center">
+            <h3 className="text-xl font-semibold mb-6">
+              Contribution Activity
+            </h3>
+            <div className="w-full overflow-x-auto flex justify-center">
+              <GitHubCalendar
+                username={GITHUB_USERNAME}
+                colorScheme="dark"
+                fontSize={14}
+                blockSize={16}
+                blockMargin={5}
+                theme={theme}
+              />
+            </div>
+            {data?.meta?.lastUpdated && (
+              <p className="text-sm text-muted-foreground mt-4">
+                Last updated: {new Date(data.meta.lastUpdated).toLocaleString()}
+              </p>
+            )}
+          </Card>
+        </motion.div>
+      </div>
+    </section>
+  );
+}
+
+export default GitHubStats;
