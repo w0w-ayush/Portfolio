@@ -9,6 +9,7 @@ import { GitHubStats } from "@/components/sections/GitHubStats";
 import Navbar from "@/components/sections/Navbar";
 import Contact from "@/components/sections/Contact";
 import Footer from "@/components/sections/Footer";
+import { Analytics } from "@vercel/analytics/react"
 
 export default function Home() {
   return (
